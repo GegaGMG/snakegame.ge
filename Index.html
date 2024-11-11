@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Game</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #333;
+      font-family: Arial, sans-serif;
+    }
+
+    #gameBoard {
+      position: relative;
+      width: 400px;
+      height: 400px;
+      background-color: #111;
+      border: 2px solid #555;
+    }
+
+    .snake {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: #00ff00;
+    }
+
+    .food {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: #ff0000;
+    }
+
+    #gameOver {
+      color: #fff;
+      font-size: 24px;
+      margin-top: 20px;
+      text-align: center;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="gameBoard"></div>
+  <div id="gameOver">Game Over! Press any key to restart.</div>
+
+  <script>
+    const boardSize = 20;
+    const gameBoard = document.getElementById('gameBoard');
+    const gameOverMessage = document.getElementById('gameOver');
+    let snake, direction, food, intervalId;
+
+    // Initialize the game
+    function initGame() {
+      snake = [{ x: 10, y: 10 }];
+      direction = { x: 0, y: 0 };
+      placeFood();
+      gameOverMessage.style.display = 'none';
+      clearInterval(intervalId);
+      intervalId = setInterval(updateGame, 100);
+      document.addEventListener('keydown', changeDirection);
+    }
+
+    // Place food at a random position
+    function placeFood() {
+      food = {
+        x: Math.floor(Math.random() * boardSize),
+        y: Math.floor(Math.random() * boardSize)
+      };
+    }
+
+    // Change direction based on arrow keys
+    function changeDirection(event) {
+      switch (event.key) {
+        case 'ArrowUp':
+          if (direction.y === 0) direction = { x: 0, y: -1 };
+          break;
+        case 'ArrowDown':
+          if (direction.y === 0) direction = { x: 0, y: 1 };
+          break;
+        case 'ArrowLeft':
+          if (direction.x === 0) direction = { x: -1, y: 0 };
+          break;
+        case 'ArrowRight':
+          if (direction.x === 0) direction = { x: 1, y: 0 };
+          break;
+      }
+    }
+
+    // Update the game state
+    function updateGame() {
+      const newHead = {
+        x: snake[0].x + direction.x,
+        y: snake[0].y + direction.y
+      };
+
+      // Check for collisions (wall or self)
+      if (
+        newHead.x < 0 || newHead.x >= boardSize ||
+        newHead.y < 0 || newHead.y >= boardSize ||
+        snake.some(segment => segment.x === newHead.x && segment.y === newHead.y)
+      ) {
+        endGame();
+        return;
+      }
+
+      snake.unshift(newHead);
+
+      if (newHead.x === food.x && newHead.y === food.y) {
+        placeFood();
+      } else {
+        snake.pop();
+      }
+
+      drawGame();
+    }
+
+    // Draw the game board
+    function drawGame() {
+      gameBoard.innerHTML = '';
+
+      snake.forEach(segment => {
+        const snakeElement = document.createElement('div');
+        snakeElement.style.left = segment.x * 20 + 'px';
+        snakeElement.style.top = segment.y * 20 + 'px';
+        snakeElement.classList.add('snake');
+        gameBoard.appendChild(snakeElement);
+      });
+
+      const foodElement = document.createElement('div');
+      foodElement.style.left = food.x * 20 + 'px';
+      foodElement.style.top = food.y * 20 + 'px';
+      foodElement.classList.add('food');
+      gameBoard.appendChild(foodElement);
+    }
+
+    // End the game
+    function endGame() {
+      clearInterval(intervalId);
+      gameOverMessage.style.display = 'block';
+      document.removeEventListener('keydown', changeDirection);
+      document.addEventListener('keydown', restartGame, { once: true });
+    }
+
+    // Restart the game
+    function restartGame() {
+      document.removeEventListener('keydown', restartGame);
+      initGame();
+    }
+
+    initGame();
+  </script>
+
+</body>
+</html>
